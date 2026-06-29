@@ -72,9 +72,12 @@ if (!window.Intl) {
   render(translationMessages);
 }
 
-// Install ServiceWorker and AppCache in the end since
-// it's not most important operation and if main code fails,
-// we do not want it installed
-if (process.env.NODE_ENV === 'production') {
+// Service workers don't run under file:// (Electron) and offer no value
+// in a packaged desktop app, so only register one when served over http(s).
+if (
+  process.env.NODE_ENV === 'production' &&
+  typeof window !== 'undefined' &&
+  window.location.protocol !== 'file:'
+) {
   require('offline-plugin/runtime').install(); // eslint-disable-line global-require
 }
