@@ -2,13 +2,13 @@
   "name": "caption-creator",
   "version": "1.0.0-alpha.1",
   "description": "a web app to compose images and text",
+  "main": "electron/main.js",
   "repository": {
     "type": "git",
     "url": "git://github.com/ljsnagy/caption-creator.git"
   },
   "engines": {
-    "npm": ">=5",
-    "node": ">=8.15.1"
+    "node": ">=16"
   },
   "author": "rzpn",
   "license": "MIT",
@@ -17,15 +17,19 @@
     "preanalyze": "npm run analyze:clean",
     "analyze": "node ./internals/scripts/analyze.js",
     "extract-intl": "node ./internals/scripts/extract-intl.js",
-    "npmcheckversion": "node ./internals/scripts/npmcheckversion.js",
-    "preinstall": "npm run npmcheckversion",
     "prebuild": "npm run build:clean",
-    "build": "cross-env NODE_ENV=production webpack --config internals/webpack/webpack.prod.babel.js --color -p --progress --hide-modules --display-optimization-bailout",
+    "build": "cross-env NODE_OPTIONS=--openssl-legacy-provider NODE_ENV=production webpack --config internals/webpack/webpack.prod.babel.js --color -p --progress --hide-modules --display-optimization-bailout",
+    "build:electron": "cross-env NODE_OPTIONS=--openssl-legacy-provider BUILD_TARGET=electron NODE_ENV=production webpack --config internals/webpack/webpack.prod.babel.js --color -p --progress --hide-modules --display-optimization-bailout",
     "build:clean": "rimraf ./build",
-    "start": "cross-env NODE_ENV=development node server",
-    "start:tunnel": "cross-env NODE_ENV=development ENABLE_TUNNEL=true node server",
+    "start": "cross-env NODE_OPTIONS=--openssl-legacy-provider NODE_ENV=development node server",
+    "start:tunnel": "cross-env NODE_OPTIONS=--openssl-legacy-provider NODE_ENV=development ENABLE_TUNNEL=true node server",
     "start:production": "npm run test && npm run build && npm run start:prod",
     "start:prod": "cross-env NODE_ENV=production node server",
+    "electron": "npm run build:electron && electron .",
+    "dist": "npm run build:electron && electron-builder",
+    "dist:win": "npm run build:electron && electron-builder --win",
+    "dist:mac": "npm run build:electron && electron-builder --mac",
+    "dist:linux": "npm run build:electron && electron-builder --linux",
     "presetup": "npm i chalk shelljs",
     "setup": "node ./internals/scripts/setup.js",
     "clean": "shjs ./internals/scripts/clean.js",
@@ -49,6 +53,58 @@
     "> 1%",
     "IE 10"
   ],
+  "build": {
+    "appId": "dev.captioncreator.app",
+    "productName": "Caption Creator",
+    "directories": {
+      "buildResources": "app/images",
+      "output": "dist"
+    },
+    "files": [
+      "electron/**/*",
+      "build/**/*",
+      "app/images/icon-512x512.png",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "app/images/icon-512x512.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    },
+    "mac": {
+      "target": [
+        "dmg"
+      ],
+      "icon": "app/images/icon-512x512.png",
+      "category": "public.app-category.graphics-design"
+    },
+    "linux": {
+      "target": [
+        "AppImage"
+      ],
+      "icon": "app/images/icon-512x512.png",
+      "category": "Graphics"
+    }
+  },
   "lint-staged": {
     "*.js": [
       "npm run lint:eslint:fix",
@@ -78,9 +134,9 @@
     "file-saver": "2.0.0-rc.3",
     "history": "4.9.0",
     "hoist-non-react-statics": "3.3.0",
-    "html2canvas": "git+https://github.com/ljsnagy/html2canvas.git#master-caption-creator",
+    "html2canvas": "1.4.1",
     "immer": "6.0.3",
-    "impetus": "git+https://github.com/ljsnagy/impetus.git",
+    "impetus": "0.8.8",
     "intl": "1.2.5",
     "invariant": "2.2.4",
     "ip": "1.1.5",
@@ -136,6 +192,8 @@
     "compression-webpack-plugin": "2.0.0",
     "coveralls": "3.0.3",
     "css-loader": "2.1.1",
+    "electron": "^33.4.11",
+    "electron-builder": "^26.0.20",
     "eslint": "5.16.0",
     "eslint-config-airbnb": "17.1.0",
     "eslint-config-airbnb-base": "13.1.0",
